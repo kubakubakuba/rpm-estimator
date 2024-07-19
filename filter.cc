@@ -41,9 +41,9 @@ Image gaussian_blur_3(Image & img){
 			uint8_t* pixel_ul = img.data + ((i - 1) * img.w + (j - 1)) * img.ch;
 			uint8_t* pixel_uu = img.data + ((i - 1) * img.w + j) * img.ch;
 			uint8_t* pixel_ur = img.data + ((i - 1) * img.w + (j +1)) * img.ch;
-			uint8_t* pixel_ll = img.data + (i * img.w + j) * img.ch;
+			uint8_t* pixel_ll = img.data + (i * img.w + (j - 1)) * img.ch;
 			uint8_t* pixel =	img.data + (i * img.w + j) * img.ch;
-			uint8_t* pixel_rr = img.data + (i * img.w + j) * img.ch;
+			uint8_t* pixel_rr = img.data + (i * img.w + (j + 1)) * img.ch;
 			uint8_t* pixel_bl = img.data + ((i + 1) * img.w + (j - 1)) * img.ch;
 			uint8_t* pixel_bb = img.data + ((i + 1) * img.w + j) * img.ch;
 			uint8_t* pixel_br = img.data + ((i + 1) * img.w + (j + 1)) * img.ch;
