@@ -4,4 +4,6 @@
 #include <cstring>
 #include "img.hh"
 
-void filter_color(Image & img, Color c, uint8_t threshold);
+Image filter_color(Image & img, Color c, uint8_t threshold);
+
+Image gaussian_blur_3(Image & img);

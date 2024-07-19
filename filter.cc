@@ -1,28 +1,69 @@
 #include "filter.hh"
 
-void filter_color(Image & img, Color c, uint8_t threshold){
-	for(int i = 0; i < img.h * img.ch; ++i){ //row idx
-		for(int j = 0; j < img.w * img.ch; j += img.ch){ //col idx
-		//std::cout << (int) c.r << std::endl;
-			uint8_t* pixel = img.data + i*img.w + j;
+Image filter_color(Image & img, Color c, uint8_t threshold){
+	Image n_img(img.w, img.h, 4); //new image with transparency layer
+
+	for(int i = 0; i < img.h; ++i){
+		for(int j = 0; j < img.w; ++j){
+			uint8_t* pixel = img.data + (i * img.w + j) * img.ch;
+			uint8_t* n_pixel = n_img.data + (i * img.w + j) * n_img.ch;
 			
 			uint8_t rr = *(pixel);
 			uint8_t gg = *(pixel + 1);
 			uint8_t bb = *(pixel + 2);
-			uint8_t aa = *(pixel + 3);
 
-			//std::cout << "r: " << (int)rr << " g: " << (int)gg << " b: " << (int)bb << " a: " << (int) aa;
-			//std::cout << " rr: " << std::abs(c.r - rr) << " gg: " << std::abs(c.g - gg) << " bb: " << std::abs(c.b - bb) << " aa: " << (int) std::abs(c.a - aa) << std::endl;
-
-			if(std::abs(c.r - rr) < threshold && std::abs(c.g - gg) < threshold && std::abs(c.b - bb) < threshold && std::abs(c.a - aa) < threshold){
-				//std::cout << "hit" << std::endl;
+			 if (std::abs(c.r - rr) < threshold && std::abs(c.g - gg) < threshold && std::abs(c.b - bb) < threshold) {
+				*(n_pixel + 0) = rr;
+				*(n_pixel + 1) = gg;
+				*(n_pixel + 2) = bb;
+				*(n_pixel + 3) = 255;
 			}
 			else{
-				//std::memset(pixel, 0xFF00FF, 4); //set RGBA to 0
-				*pixel = i;
+				//invisible violet for indication of error
+				*(n_pixel + 0) = 255;
+				*(n_pixel + 1) = 0;
+				*(n_pixel + 2) = 255;
+				*(n_pixel + 3) = 0;
 			}
 		}
 	}
+
+	return n_img;
 }
 
-void filter_color(Image & img, uint8_t r, uint8_t g, uint8_t b);
+Image gaussian_blur_3(Image & img){
+	Image n_img(img.w, img.h, 4);
+	
+	int kernel[3][3] = {{1, 2, 1}, {2, 4, 2}, {1, 2, 1}};
+
+	for(int i = 1; i < img.h - 1; ++i){ //cols
+		for(int j = 1; j < img.w - 1; ++j){ //rows
+			uint8_t* pixel_ul = img.data + ((i - 1) * img.w + (j - 1)) * img.ch;
+			uint8_t* pixel_uu = img.data + ((i - 1) * img.w + j) * img.ch;
+			uint8_t* pixel_ur = img.data + ((i - 1) * img.w + (j +1)) * img.ch;
+			uint8_t* pixel_ll = img.data + (i * img.w + j) * img.ch;
+			uint8_t* pixel =	img.data + (i * img.w + j) * img.ch;
+			uint8_t* pixel_rr = img.data + (i * img.w + j) * img.ch;
+			uint8_t* pixel_bl = img.data + ((i + 1) * img.w + (j - 1)) * img.ch;
+			uint8_t* pixel_bb = img.data + ((i + 1) * img.w + j) * img.ch;
+			uint8_t* pixel_br = img.data + ((i + 1) * img.w + (j + 1)) * img.ch;
+
+			uint8_t* n_pixel = n_img.data + (i * img.w + j) * n_img.ch;
+
+			uint8_t val[4];
+			for(int c = 0; c < 4; ++c){
+				val[c] = (*(pixel_ul + c) * kernel[0][0] + *(pixel_uu + c) * kernel[0][1] + *(pixel_ur + c) * kernel[0][2] +
+							  *(pixel_ll + c) * kernel[1][0] + *(pixel + c) * kernel[1][1] + *(pixel_rr + c) * kernel[1][2] +
+							  *(pixel_bl + c) * kernel[2][0] + *(pixel_bb + c) * kernel[2][1] + *(pixel_br + c) * kernel[2][2])
+							  / 16.0;
+			}
+
+			*(n_pixel) = 	 val[0];
+			*(n_pixel + 1) = val[1];
+			*(n_pixel + 2) = val[2];
+			*(n_pixel + 3) = val[3];
+		}
+	}
+
+	return n_img;
+}
